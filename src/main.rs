@@ -3,10 +3,12 @@ use std::io::Read;
 use std::path::Path;
 use std::fs::File;
 
+mod cpu;
+
 fn main() {
     let rom_path = env::args().nth(1).unwrap();
     let rom = read_binary(&rom_path);
-
+    let mut cpu = cpu::Cpu::new();
 }
 
 fn read_binary<P: AsRef<Path>>(path: P) -> Box<[u8]>{
