@@ -1,0 +1,6 @@
+[package]
+name = "fizzbin"
+version = "0.1.0"
+authors = ["Jules <jules@metafnord.net>"]
+
+[dependencies]
