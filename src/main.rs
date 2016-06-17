@@ -12,8 +12,8 @@ fn main() {
     let mut interconnect = interconnect::Interconnect::new();
     interconnect.load_rom(rom);
 
-    println!("instruction at 0x200: {:#x}", interconnect.read_word(0x200));
     let mut cpu = cpu::Cpu::new(interconnect);
+    cpu.run();
 
 }
 

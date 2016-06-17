@@ -24,4 +24,32 @@ impl Cpu{
             interconnect: interconnect
         }
     }
+
+    pub fn run(&mut self){
+        loop{
+            self.run_instruction();
+        }
+    }
+
+    pub fn run_instruction(&mut self){
+        let instruction = self.interconnect.read_word(self.reg_pc);
+        println!("instruction: {:#x}", instruction);
+        let opcode = (instruction >> 12) & 0b1111;
+        println!("opcode: {:#x}", opcode);
+
+        match opcode{
+            0xa => {
+                //LD I,Addr
+                let addr = (instruction) & 0b0111111111111111;
+                self.reg_I = addr;
+                println!("addr: {:#x}", addr);
+            },
+            _ =>{
+                panic!("Unrecognized instruction: {:#x}", instruction);
+            }
+        }
+
+        self.reg_pc += 2;
+    }
+
 }
