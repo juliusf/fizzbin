@@ -36,14 +36,47 @@ impl Cpu{
         println!("instruction: {:#x}", instruction);
         let opcode = (instruction >> 12) & 0b1111;
         println!("opcode: {:#x}", opcode);
+        let VX = (instruction >> 8) & 0b00001111;
 
         match opcode{
+            0x2 => {
+                // CALL Addr
+                let addr = (instruction) & 0b0000111111111111;
+                self.interconnect.push_stack(self.reg_pc + 2);
+                self.reg_pc = addr;
+                return
+            },
+            0x6 => {
+                 //Set VX = Byte
+                let value = (instruction ) & 0x00FF;
+                self.write_reg_gpr(VX as usize, value as u8)
+            },
+            0x7 => {
+                // add vr,vx
+                let value = (instruction) & 0x00FF;
+                let new_value = self.reg_gpr[VX as usize] + value as u8;
+                self.write_reg_gpr(VX as usize, new_value)
+            },
             0xa => {
                 //LD I,Addr
-                let addr = (instruction) & 0b0111111111111111;
+                let addr = (instruction) & 0b0000111111111111;
                 self.reg_I = addr;
                 println!("addr: {:#x}", addr);
             },
+            0x0 => {
+                match instruction {
+                    0x00EE =>{
+                        // return from subroutine call
+                        self.reg_pc = self.interconnect.pop_stack();
+                        return
+                    },
+                    _ => {
+                        panic!("Invalid Instrucition!");
+                    }
+
+               }
+            },
+
             _ =>{
                 panic!("Unrecognized instruction: {:#x}", instruction);
             }
@@ -52,4 +85,15 @@ impl Cpu{
         self.reg_pc += 2;
     }
 
+    fn write_reg_gpr(&mut self, index: usize, value:u8 )
+    {
+        if (index != 0xF && index <= NUM_GPR)
+        {
+        self.reg_gpr[index] = value
+        } else
+        {
+             panic!("Invalid Register access!");
+        }
+
+    }
 }

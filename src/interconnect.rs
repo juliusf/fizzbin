@@ -4,7 +4,8 @@ const STACK_SIZE: usize = 16;
 
 pub struct Interconnect{
     ram: Box<[u8]>,
-    stack: Box<[u16]>
+    stack: Box<[u16]>,
+    stack_ptr: usize
 }
 
 impl Interconnect{
@@ -13,6 +14,7 @@ impl Interconnect{
 
         ram: vec![0; RAM_SIZE].into_boxed_slice(),
         stack: vec![0; STACK_SIZE].into_boxed_slice(),
+        stack_ptr:  0,
         }
     }
     pub fn load_rom(&mut self, rom: Box<[u8]>){
@@ -26,8 +28,27 @@ impl Interconnect{
 
         } else
         {
-             panic!{"Invalid Memory access: {:#x}", addr}
+             panic!("Invalid Memory access: {:#x}", addr)
         }
 
    }
+    pub fn push_stack(&mut self, addr: u16){
+        if self.stack_ptr + 1 == STACK_SIZE{
+             panic!("Stack Overflow!");
+        }
+        self.stack_ptr +=1;
+        self.stack[self.stack_ptr] = addr;
+
+    }
+
+    pub fn pop_stack(&mut self) -> u16
+    {
+        if self.stack_ptr >= 0{
+        self.stack_ptr -=1;
+        self.stack[self.stack_ptr +1]
+       }else
+       {
+        panic!("Called pop on empty stack!");
+       }
+    }
 }
