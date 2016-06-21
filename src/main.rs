@@ -1,12 +1,19 @@
+extern crate piston_window;
+
 use std::env;
 use std::io::Read;
 use std::path::Path;
 use std::fs::File;
+use std::thread;
+use piston_window::*;
 
+mod gfx;
 mod cpu;
 mod interconnect;
 
 fn main() {
+
+    init_graphics();
     let rom_path = env::args().nth(1).unwrap();
     let rom = read_binary(&rom_path);
     let mut interconnect = interconnect::Interconnect::new();
@@ -16,6 +23,9 @@ fn main() {
     cpu.run();
 
 }
+
+fn init_graphics(){
+    }
 
 fn read_binary<P: AsRef<Path>>(path: P) -> Box<[u8]>{
     let mut file = File::open(path).unwrap();

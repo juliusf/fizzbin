@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Jules <jules@metafnord.net>"]
 
 [dependencies]
+piston_window = "0.48.0"
+
