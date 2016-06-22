@@ -46,8 +46,10 @@ impl Interconnect{
 
     pub fn draw_on_screen(&mut self, screen_loc_x: usize, screen_loc_y: usize, memory_loc: u16, length: usize) -> bool{
 
-        let sprite = self.ram[memory_loc as usize .. (memory_loc + length as u16) as usize];
-        self.gfx.draw_sprite(screen_loc_x, screen_loc_y, &sprite);
+        let sprite = &self.ram[memory_loc as usize .. (memory_loc + length as u16) as usize];
+        let result = self.gfx.draw_sprite(screen_loc_x, screen_loc_y, &sprite);
+        print!("{:?}", self.gfx);
+        result
     }
 
     pub fn pop_stack(&mut self) -> u16

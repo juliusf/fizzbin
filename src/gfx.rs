@@ -75,10 +75,15 @@ impl Gfx{
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             for row in self.back_buffer.iter(){
                 for entry in row.iter(){
-                    print!("{}",entry);
+                    if *entry{
+                        print!("X");
+                    } else{
+                        print!(" ");
+                    }
                 }
                 print!("\n");
             }
-             Ok(())
+            Ok(())
         }
     }
+
