@@ -46,6 +46,13 @@ impl Cpu{
                 self.reg_pc = addr;
                 return
             },
+            0x3 => {
+                // SE VX != byte
+                let value = (instruction) & 0x00FF;
+                if value as u8 != self.reg_gpr[ VX as usize]{
+                     self.reg_pc +=2;
+                }
+            }
             0x6 => {
                  //Set VX = Byte
                 let value = (instruction ) & 0x00FF;
@@ -65,10 +72,17 @@ impl Cpu{
             },
             0xd => {
                 //DRW Vx, Vy, nibble
-                let x_coord = (instruction >> 8) &  0b00001111;
-                let y_coord = (instruction >> 4) &  0x000F;
+                let x_reg = (instruction >> 8) &  0b00001111;
+                let y_reg = (instruction >> 4) &  0x000F;
+                let x_coord = self.reg_gpr[x_reg as usize];
+                let y_coord = self.reg_gpr[y_reg as usize];
                 let nibble  = (instruction) & 0x000F;
                 let collision = self.interconnect.draw_on_screen(x_coord as usize, y_coord  as usize, self.reg_I, nibble as usize);
+                if collision == true {
+                     self.reg_gpr[15] = 1;
+                }else{
+                     self.reg_gpr[15] = 0;
+                }
                 println!("x coord: {:#x}, y coord: {:#x}", x_coord, y_coord);
 
             },
