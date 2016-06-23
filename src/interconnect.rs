@@ -1,5 +1,5 @@
 use super::gfx;
-
+use super::inputhandler;
 const RAM_SIZE: usize = 4 * 1024;
 const STACK_SIZE: usize = 16;
 
@@ -7,7 +7,8 @@ pub struct Interconnect{
     ram: Box<[u8]>,
     stack: Box<[u16]>,
     stack_ptr: usize,
-    gfx: gfx::Gfx
+    gfx: gfx::Gfx,
+    input_handler: inputhandler::InputHandler, 
 }
 
 impl Interconnect{
@@ -18,6 +19,7 @@ impl Interconnect{
         stack: vec![0; STACK_SIZE].into_boxed_slice(),
         stack_ptr:  0,
         gfx: gfx::Gfx::new(),
+        input_handler: inputhandler::InputHandler::new(),
         }
     }
     pub fn load_rom(&mut self, rom: Box<[u8]>){
@@ -50,6 +52,10 @@ impl Interconnect{
         let result = self.gfx.draw_sprite(screen_loc_x, screen_loc_y, &sprite);
         print!("{:?}", self.gfx);
         result
+    }
+
+    pub fn get_key_state(&mut self, key_index: usize) -> bool{
+        self.input_handler.get_key_state(key_index)
     }
 
     pub fn pop_stack(&mut self) -> u16

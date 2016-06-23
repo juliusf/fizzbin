@@ -1,4 +1,9 @@
-use super::interconnect;
+extern crate rand;
+
+use super::{interconnect, timer};
+use rand::{Rng, ThreadRng};
+
+
 const NUM_GPR: usize = 16;
 
 pub struct Cpu{
@@ -6,10 +11,10 @@ pub struct Cpu{
     reg_I: u16,
     reg_pc: u16,
     reg_sp: u8,
-    reg_DT: u16, // TODO: other data type
-    reg_ST: u16,  // TODO: other data type
-
-    interconnect: interconnect::Interconnect
+    reg_DT: timer::Timer,
+    reg_ST: timer::Timer,
+    interconnect: interconnect::Interconnect,
+    rng: ThreadRng,
 }
 
 impl Cpu{
@@ -19,14 +24,17 @@ impl Cpu{
             reg_I: 0,
             reg_pc: 0x200, // TODO: is this correct?
             reg_sp: 0,
-            reg_DT: 0,
-            reg_ST: 0,
-            interconnect: interconnect
+            reg_DT: timer::Timer::new(),
+            reg_ST: timer::Timer::new(),
+            interconnect: interconnect,
+            rng: rand::thread_rng(),
         }
     }
 
     pub fn run(&mut self){
         loop{
+            self.reg_DT.start_timer();
+            //.reg_ST.start_timer();
             self.run_instruction();
         }
     }
@@ -39,6 +47,12 @@ impl Cpu{
         let VX = (instruction >> 8) & 0b00001111;
 
         match opcode{
+            0x1 =>{
+                //JMP addr
+                let addr =  (instruction) & 0x0FFF;
+                self.reg_pc = addr;
+                return
+            },
             0x2 => {
                 // CALL Addr
                 let addr = (instruction) & 0b0000111111111111;
@@ -47,21 +61,28 @@ impl Cpu{
                 return
             },
             0x3 => {
-                // SE VX != byte
+                // SE VX == byte
+                let value = (instruction) & 0x00FF;
+                if value as u8 == self.reg_gpr[ VX as usize]{
+                     self.reg_pc +=2;
+                }
+            },
+            0x4 => {
+                //SE VX != byte
                 let value = (instruction) & 0x00FF;
                 if value as u8 != self.reg_gpr[ VX as usize]{
                      self.reg_pc +=2;
                 }
-            }
+            },
             0x6 => {
                  //Set VX = Byte
                 let value = (instruction ) & 0x00FF;
                 self.write_reg_gpr(VX as usize, value as u8)
             },
             0x7 => {
-                // add vr,vx
+                // add vr byte
                 let value = (instruction) & 0x00FF;
-                let new_value = self.reg_gpr[VX as usize] + value as u8;
+                let new_value = self.reg_gpr[VX as usize].wrapping_add(value as u8);
                 self.write_reg_gpr(VX as usize, new_value)
             },
             0xa => {
@@ -69,6 +90,12 @@ impl Cpu{
                 let addr = (instruction) & 0b0000111111111111;
                 self.reg_I = addr;
                 println!("addr: {:#x}", addr);
+            },
+            0xc =>{
+                 // RND VX, Byte
+                let rand = self.rng.gen::<u8>();
+                let value = (instruction) & 0x00FF;
+                self.write_reg_gpr(VX as usize, rand & value as u8);
             },
             0xd => {
                 //DRW Vx, Vy, nibble
@@ -99,6 +126,38 @@ impl Cpu{
 
                }
             },
+            0xe => {
+                match instruction & 0xF0FF{
+                    0xE0A1 => {
+                        //SKNP Vx
+                        let key_pressed = self.interconnect.get_key_state(VX as usize);
+                        if key_pressed{
+                            self.reg_pc += 2;
+                        }
+                    },
+                    _ =>{
+                        panic!("Invalid Instruction!");
+                    }
+                }
+            },
+            0xf =>{
+                match instruction & 0xF0FF{
+                    0xF01E => {
+                        //ADD I, VX
+                        let mut tmp = self.reg_I;
+                        tmp += self.reg_gpr[VX as usize] as u16;
+                        self.reg_I = tmp;
+                    },
+                    0xF015 => {
+                        // LD DT, VX
+                        self.reg_DT.set(VX as u8);
+                    },
+                    _=> {
+                        panic!("Invalid Instruction!");
+                    }
+
+                }
+            },
 
             _ =>{
                 panic!("Unrecognized instruction: {:#x}", instruction);
@@ -110,7 +169,7 @@ impl Cpu{
 
     fn write_reg_gpr(&mut self, index: usize, value:u8 )
     {
-        if (index != 0xF && index <= NUM_GPR)
+        if index != 0xF && index <= NUM_GPR
         {
         self.reg_gpr[index] = value
         } else

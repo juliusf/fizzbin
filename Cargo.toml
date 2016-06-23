@@ -5,4 +5,5 @@ authors = ["Jules <jules@metafnord.net>"]
 
 [dependencies]
 piston_window = "0.48.0"
+rand = "0.3"
 

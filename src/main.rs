@@ -1,4 +1,5 @@
 extern crate piston_window;
+extern crate rand;
 
 use std::env;
 use std::io::Read;
@@ -10,6 +11,8 @@ use piston_window::*;
 mod gfx;
 mod cpu;
 mod interconnect;
+mod timer;
+mod inputhandler;
 
 fn main() {
 
