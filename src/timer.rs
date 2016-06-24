@@ -48,7 +48,7 @@ impl Timer{
             		}
 				*/
                     let mut timer_val = my_time_lock.unwrap();
-                    println!("Updating lock to {}", *timer_val);
+                    //println!("Updating lock to {}", *timer_val);
                     *timer_val = (*timer_val).wrapping_sub(1);
 
                 }

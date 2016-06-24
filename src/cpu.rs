@@ -32,19 +32,17 @@ impl Cpu{
     }
 
     pub fn run(&mut self){
+        self.reg_DT.start_timer();
         loop{
-            self.reg_DT.start_timer();
-            //.reg_ST.start_timer();
             self.run_instruction();
         }
     }
 
     pub fn run_instruction(&mut self){
         let instruction = self.interconnect.read_word(self.reg_pc);
-        println!("instruction: {:#x}", instruction);
         let opcode = (instruction >> 12) & 0b1111;
-        println!("opcode: {:#x}", opcode);
         let VX = (instruction >> 8) & 0b00001111;
+        let VY = (instruction >> 4) & 0x000F;
 
         match opcode{
             0x1 =>{
@@ -85,11 +83,28 @@ impl Cpu{
                 let new_value = self.reg_gpr[VX as usize].wrapping_add(value as u8);
                 self.write_reg_gpr(VX as usize, new_value)
             },
+            0x8 => {
+                match instruction & 0xF00F{
+                    0x8000 =>{
+                        //LD Vx, vy
+                        let value_y = self.reg_gpr[VY as usize];
+                        self.write_reg_gpr(VX as usize, value_y as u8);
+                    },
+                    _ => {
+                        self.halt_invalid_instruction(opcode, instruction);
+                    }
+                }
+            },
+            0x9 => {
+                // SNE Vx, Vy
+                if VX != VY{
+                    self.reg_pc += 2;
+                }
+            },
             0xa => {
                 //LD I,Addr
                 let addr = (instruction) & 0b0000111111111111;
                 self.reg_I = addr;
-                println!("addr: {:#x}", addr);
             },
             0xc =>{
                  // RND VX, Byte
@@ -121,7 +136,7 @@ impl Cpu{
                         return
                     },
                     _ => {
-                        panic!("Invalid Instrucition!");
+                        self.halt_invalid_instruction(opcode, instruction);
                     }
 
                }
@@ -131,12 +146,20 @@ impl Cpu{
                     0xE0A1 => {
                         //SKNP Vx
                         let key_pressed = self.interconnect.get_key_state(VX as usize);
-                        if key_pressed{
+                        if ! key_pressed{
                             self.reg_pc += 2;
                         }
                     },
+                    0xE09E => {
+                        // SKP Vx
+                        let key_pressed = self.interconnect.get_key_state(VX as usize);
+                        if key_pressed{
+                            self.reg_pc += 2;
+                        }
+
+                    },
                     _ =>{
-                        panic!("Invalid Instruction!");
+                        self.halt_invalid_instruction(opcode, instruction);
                     }
                 }
             },
@@ -152,19 +175,37 @@ impl Cpu{
                         // LD DT, VX
                         self.reg_DT.set(VX as u8);
                     },
+                    0xF007 =>{
+                        //LD Vx, DT
+                        let dt = self.reg_DT.get();
+                        self.write_reg_gpr(VX as usize, dt as u8);
+                    },
+
+                    0xF055 => {
+                        //LD [I], Vx
+                        let offset = self.reg_I;
+                        for i in 0 .. VX{
+                            let register_val = self.reg_gpr[i as usize];
+                            self.interconnect.write_byte_to_ram(offset + i, register_val);
+                        }
+                    },
                     _=> {
-                        panic!("Invalid Instruction!");
+                        self.halt_invalid_instruction(opcode, instruction);
                     }
 
                 }
             },
 
             _ =>{
-                panic!("Unrecognized instruction: {:#x}", instruction);
+                self.halt_invalid_instruction(opcode, instruction);
             }
         }
 
         self.reg_pc += 2;
+    }
+
+    fn halt_invalid_instruction(&mut self, opcode: u16, instruction: u16){
+        panic!("Invalid Instruction! opcode: {:#x} instruction: {:#x}", opcode, instruction);
     }
 
     fn write_reg_gpr(&mut self, index: usize, value:u8 )

@@ -77,12 +77,12 @@ impl Gfx{
                 print!("{:02}|",i);
                 for entry in row.iter(){
                     if *entry{
-                        print!("X");
+                        print!("■");
                     } else{
-                        print!("_");
+                        print!(" ");
                     }
                 }
-                print!("|{}\n", row.len() -1);
+                print!("|{:02}\n", i);
             }
             Ok(())
         }

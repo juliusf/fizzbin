@@ -58,6 +58,10 @@ impl Interconnect{
         self.input_handler.get_key_state(key_index)
     }
 
+    pub fn write_byte_to_ram(&mut self, addr: u16, val: u8){
+        self.ram[addr as usize] = val;
+    }
+
     pub fn pop_stack(&mut self) -> u16
     {
         if self.stack_ptr >= 0{
