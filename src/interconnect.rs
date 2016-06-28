@@ -66,6 +66,10 @@ impl Interconnect{
         self.ram[addr as usize]
     }
 
+    pub fn get_screen_contents(&mut self) -> &[[bool; gfx::RES_X]; gfx::RES_Y]{
+         self.gfx.get_frame()
+    }
+
     pub fn pop_stack(&mut self) -> u16
     {
         if self.stack_ptr >= 0{

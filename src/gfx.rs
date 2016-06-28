@@ -1,6 +1,6 @@
 
-const RES_X: usize = 64;
-const RES_Y: usize = 32;
+pub const RES_X: usize = 64;
+pub const RES_Y: usize = 32;
 use std::fmt;
 use std::sync::{Arc, RwLock};
 pub struct Gfx{
@@ -73,8 +73,8 @@ impl Gfx{
             false
     }
 
-    pub fn get_frame(&mut self) -> [[bool;RES_X]; RES_Y]{
-        *self.back_buffer.read().unwrap()
+    pub fn get_frame(&mut self) -> &[[bool;RES_X]; RES_Y]{
+         & *self.back_buffer.read().unwrap()
     }
 }
     impl fmt::Debug for Gfx {
