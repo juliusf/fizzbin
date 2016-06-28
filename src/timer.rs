@@ -22,18 +22,6 @@ impl Timer{
             	
             	let my_time_lock = my_time.read();
             	
-            	/*
-            	match my_time_lock{
-            		Err(e) =>{
-            			println!("ERR: {:?}", e);
-            			return
-            		},
-            		_ =>{
-
-            		}
-            	}
-				*/
-                
                 if *(my_time_lock.unwrap()) > 0{
                 
                     let my_time_lock = my_time.write();

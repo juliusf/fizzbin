@@ -22,7 +22,7 @@ impl Interconnect{
         input_handler: inputhandler::InputHandler::new(),
         }
     }
-    pub fn load_rom(&mut self, rom: Box<[u8]>){
+    pub fn load_rom(&mut self, rom: &Box<[u8]>){
          self.ram[0x200..(0x200 + rom.len())].clone_from_slice(&rom);
     }
 
@@ -60,6 +60,10 @@ impl Interconnect{
 
     pub fn write_byte_to_ram(&mut self, addr: u16, val: u8){
         self.ram[addr as usize] = val;
+    }
+
+    pub fn read_byte_from_ram(&mut self, addr:u16) -> u8{
+        self.ram[addr as usize]
     }
 
     pub fn pop_stack(&mut self) -> u16

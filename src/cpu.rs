@@ -6,19 +6,19 @@ use rand::{Rng, ThreadRng};
 
 const NUM_GPR: usize = 16;
 
-pub struct Cpu{
+pub struct Cpu<'a>{
     reg_gpr: [u8; NUM_GPR],
     reg_I: u16,
     reg_pc: u16,
     reg_sp: u8,
     reg_DT: timer::Timer,
     reg_ST: timer::Timer,
-    interconnect: interconnect::Interconnect,
+    interconnect: &'a mut interconnect::Interconnect,
     rng: ThreadRng,
 }
 
-impl Cpu{
-    pub fn new(interconnect: interconnect::Interconnect) -> Cpu{
+impl <'a>Cpu< 'a>{
+    pub fn new(interconnect: &mut interconnect::Interconnect) -> Cpu{
         Cpu{
             reg_gpr: [0; NUM_GPR],
             reg_I: 0,
@@ -181,6 +181,18 @@ impl Cpu{
                         self.write_reg_gpr(VX as usize, dt as u8);
                     },
 
+                    0xF033 => {
+                        //LD B, Vx (Store as BCD)
+                        let value = self.reg_gpr[VX as usize];
+                        let hundreds = value / 100;
+                        let tens = (value - (hundreds * 100)) / 10;
+                        let ones = (value - (hundreds * 100) - (tens * 10));
+
+                        self.interconnect.write_byte_to_ram(self.reg_I, hundreds);
+                        self.interconnect.write_byte_to_ram(self.reg_I + 1, tens);
+                        self.interconnect.write_byte_to_ram(self.reg_I + 2, ones);
+                    },
+
                     0xF055 => {
                         //LD [I], Vx
                         let offset = self.reg_I;
@@ -188,6 +200,14 @@ impl Cpu{
                             let register_val = self.reg_gpr[i as usize];
                             self.interconnect.write_byte_to_ram(offset + i, register_val);
                         }
+                    },
+                    0xF065 => {
+                        // LD Vx, [I]
+                        let offset = self.reg_I;
+                        for i in 0 ..VX{
+                            let val = self.interconnect.read_byte_from_ram(offset);
+                            self.write_reg_gpr(VX as usize, val);
+                        }    
                     },
                     _=> {
                         self.halt_invalid_instruction(opcode, instruction);
