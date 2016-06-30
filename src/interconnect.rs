@@ -1,5 +1,7 @@
 use super::gfx;
 use super::inputhandler;
+use std::sync::{Arc,Mutex};
+
 const RAM_SIZE: usize = 4 * 1024;
 const STACK_SIZE: usize = 16;
 
@@ -50,7 +52,7 @@ impl Interconnect{
 
         let sprite = &self.ram[memory_loc as usize .. (memory_loc + length as u16) as usize];
         let result = self.gfx.draw_sprite(screen_loc_x, screen_loc_y, &sprite);
-        print!("{:?}", self.gfx);
+        //print!("{:?}", self.gfx);
         result
     }
 
@@ -66,7 +68,7 @@ impl Interconnect{
         self.ram[addr as usize]
     }
 
-    pub fn get_screen_contents(&mut self) -> &[[bool; gfx::RES_X]; gfx::RES_Y]{
+    pub fn get_screen_contents(&mut self) -> Arc<Mutex<[[bool; gfx::RES_X]; gfx::RES_Y]>>{
          self.gfx.get_frame()
     }
 

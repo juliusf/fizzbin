@@ -2,19 +2,19 @@
 pub const RES_X: usize = 64;
 pub const RES_Y: usize = 32;
 use std::fmt;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex};
 pub struct Gfx{
-    back_buffer: Arc<RwLock<[[bool; RES_X]; RES_Y]>>,
+    back_buffer: Arc<Mutex<[[bool; RES_X]; RES_Y]>>,
 }
 
 impl Gfx{
     pub fn new() -> Gfx{
         Gfx{
-            back_buffer: Arc::new(RwLock::new([[false; RES_X]; RES_Y])),
+            back_buffer: Arc::new(Mutex::new([[false; RES_X]; RES_Y])),
         }
     }
     pub fn draw_sprite(&mut self, x: usize, y: usize, sprite: &[u8]) -> bool{ // return strue when a collision is detected
-        let mut the_buffer = self.back_buffer.write().unwrap();
+        let mut the_buffer = self.back_buffer.lock().unwrap();
         
         let mut collision = false;
         for (sprite_index, tmp_y) in (y .. y + sprite.len()  ).enumerate(){
@@ -73,13 +73,13 @@ impl Gfx{
             false
     }
 
-    pub fn get_frame(&mut self) -> &[[bool;RES_X]; RES_Y]{
-         & *self.back_buffer.read().unwrap()
+    pub fn get_frame(&mut self) -> Arc<Mutex<[[bool; RES_X]; RES_Y]>>{
+         self.back_buffer.clone()
     }
 }
     impl fmt::Debug for Gfx {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-           let handle = self.back_buffer.read().unwrap();
+           let handle = self.back_buffer.lock().unwrap();
             for (i, row) in handle.iter().enumerate(){
                 print!("{:02}|",i);
                 for entry in row.iter(){

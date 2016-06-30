@@ -125,7 +125,6 @@ impl <'a>Cpu< 'a>{
                 }else{
                      self.reg_gpr[15] = 0;
                 }
-                println!("x coord: {:#x}, y coord: {:#x}", x_coord, y_coord);
 
             },
             0x0 => {
